@@ -4,16 +4,23 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 var (
-	token   = "MTAzODQ2MzA0OTQ5NDk1ODIyMA.GMEDuY.lfL6ctUI3syjt01CmOWriIQdH79Zo08HszmlXE"
-	appID   = "1038463049494958220"
-	guildID = "1038468460654645310"
+	base64img   string
+	contentType string
+)
+
+var (
+	AvatarFile string
+	AvatarURL  string
+	prefix     = "!"
+	token      = "MTAzODQ2MzA0OTQ5NDk1ODIyMA.GMEDuY.lfL6ctUI3syjt01CmOWriIQdH79Zo08HszmlXE"
+	appID      = "1038463049494958220"
+	guildID    = "1038468460654645310"
 )
 
 func initializeDiscord() *discordgo.Session {
@@ -25,8 +32,24 @@ func initializeDiscord() *discordgo.Session {
 	return discord
 }
 
+type Config struct {
+	Prefix        string `json:"prefix"`
+	ServiceURL    string `json:"service_url"`
+	BotToken      string `json:"bot_token"`
+	OwnerID       string `json:"owner_id"`
+	UseSharding   bool   `json:"use_sharding"`
+	ShardID       int    `json:"shard_id"`
+	ShardCount    int    `json:"shard_count"`
+	DefaultStatus string `json:"default_status"`
+}
+
 type DiscordBot struct {
-	discord *discordgo.Session
+	discord     *discordgo.Session
+	guild       *discordgo.Guild
+	User        *discordgo.User
+	TextChannel *discordgo.Channel
+	Message     *discordgo.Message
+	Youtube     *Config
 }
 
 func NewDiscordBot(token string) (*DiscordBot, error) {
@@ -41,6 +64,8 @@ func (d *DiscordBot) Start() error {
 	d.discord.AddHandler(createChannel)
 	d.discord.AddHandler(deleteChannel)
 	d.discord.AddHandler(CreatePingOrPong)
+	d.discord.AddHandler(changeAvatar)
+	d.discord.AddHandler(clearMessages)
 	err := d.discord.Open()
 	if err != nil {
 		return err
@@ -63,6 +88,7 @@ func main() {
 		fmt.Println("error starting discord bot,", err)
 		return
 	}
+
 	eventLoop(discordBot.discord)
 }
 
@@ -75,50 +101,4 @@ func eventLoop(dc *discordgo.Session) {
 
 	// Cleanly close down the Discord session.
 	dc.Close()
-}
-
-func createChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if strings.HasPrefix(m.Content, "create channel") {
-		// get the name of the channel
-		channelName := strings.TrimPrefix(m.Content, "create channel")
-		// create the channel
-		channel, err := s.GuildChannelCreate(guildID, channelName, discordgo.ChannelTypeGuildText)
-		if err != nil {
-			fmt.Println("error creating channel,", err)
-			return
-		}
-		s.ChannelMessageSend(m.ChannelID, "Channel created!")
-
-		// send a message to the channel
-		s.ChannelMessageSend(channel.ID, "Hello World!")
-	}
-}
-
-func deleteChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if strings.HasPrefix(m.Content, "delete channel") {
-		// get the name of the channel
-		channelName := strings.TrimPrefix(m.Content, "delete channel ")
-		// get the channel id
-		channels, err := s.GuildChannels(guildID)
-		if err != nil {
-			fmt.Println("error getting channels,", err)
-			return
-		}
-		var channelID string
-		for _, channel := range channels {
-			cnn := strings.TrimSpace(channel.Name)
-			if cnn == channelName {
-				channelID = channel.ID
-				break
-			}
-		}
-		s.ChannelMessageSend(m.ChannelID, "Channel deleted!")
-		// delete the channel
-		_, err = s.ChannelDelete(channelID)
-		if err != nil {
-			fmt.Println("error deleting channel,", err)
-			return
-		}
-
-	}
 }
