@@ -25,4 +25,8 @@ func CreatePingOrPong(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Content == "mkk" {
 		s.ChannelMessageSend(m.ChannelID, "skm")
 	}
+
+	if m.Content == "good bot" {
+		s.ChannelMessageSend(m.ChannelID, "eyw")
+	}
 }

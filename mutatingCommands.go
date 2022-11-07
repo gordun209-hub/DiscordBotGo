@@ -35,9 +35,9 @@ func createChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func deleteChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if strings.HasPrefix(m.Content, "!delete channel") {
+	if strings.HasPrefix(m.Content, "!delete channel ") {
 		// get the name of the channel
-		channelName := strings.TrimPrefix(m.Content, "delete channel ")
+		channelName := strings.TrimPrefix(m.Content, "!delete channel ")
 		// get the channel id
 		channels, err := s.GuildChannels(guildID)
 		if err != nil {
@@ -52,7 +52,6 @@ func deleteChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 				break
 			}
 		}
-		s.ChannelMessageSend(m.ChannelID, "Channel deleted!")
 		// delete the channel
 		_, err = s.ChannelDelete(channelID)
 		if err != nil {
