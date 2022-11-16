@@ -14,7 +14,19 @@ type Members struct {
 	members []*discordgo.Member
 }
 
-func initializeMembers(dg *DiscordBot) (*Members, error) {
+func (m *Members) String() string {
+	var s string
+	for _, member := range m.members {
+		s += "\n" + member.User.Username + "\n discriminator :  " + member.User.Discriminator + " \n ID : " + member.User.ID
+	}
+	return s
+}
+
+type Discord struct {
+	*discordgo.Session
+}
+
+func (dg *DiscordBot) initializeMembers() (*Members, error) {
 	// get the members
 	members, err := dg.discord.GuildMembers(guildID, "", 1000)
 	return &Members{members: members}, err
@@ -41,37 +53,18 @@ func main() {
 		fmt.Println("error creating discord bot,", err)
 		return
 	}
-	err = discordBot.Start()
-	if err != nil {
-		fmt.Println("error starting discord bot,", err)
-		return
-	}
-	members, err := initializeMembers(discordBot)
+
+	discordBot.Start()
+	members, err := discordBot.initializeMembers()
 	if err != nil {
 		fmt.Println("error getting members,", err)
 		return
 	}
+	fmt.Println("members:", members)
 	client, _ := ConnectDB()
-	// put members to db
-	for _, member := range members.members {
-		_, errr := client.User.CreateOne(
-			db.User.Name.Set(member.User.Username),
-		).Exec(context.Background())
-		if errr != nil {
-			fmt.Println("error putting member to db,", err)
-			return
-		}
-	}
-	// get users from db
-	users, err := client.User.FindMany().Exec(context.Background())
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	for _, user := range users {
-		fmt.Println(user.Score)
-	}
-	// change users score
+	// get users from db
+
 	// disconnect db
 	defer func() {
 		if err := client.Prisma.Disconnect(); err != nil {

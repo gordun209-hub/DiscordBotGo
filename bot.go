@@ -9,9 +9,17 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+var events = map[string]func(*discordgo.Session, *discordgo.MessageCreate){
+	"createChannel":    createChannel,
+	"deleteChannel":    deleteChannel,
+	"CreatePingOrPong": CreatePingOrPong,
+	"changeAvatar":     changeAvatar,
+	"clearMessages":    clearMessages,
+}
+
 var (
 	prefix  = "!"
-	token   string
+	token   = "MTAzODQ2MzA0OTQ5NDk1ODIyMA.GBNLBN.k0s7ZfFRmlw0eT_ZPk14D_USECtTHamtgg7nd8"
 	appID   = "1038463049494958220"
 	guildID = "1038468460654645310"
 )
@@ -37,7 +45,6 @@ type DiscordBot struct {
 }
 
 func NewDiscordBot() (*DiscordBot, error) {
-	token := getToken()
 	discord, err := discordgo.New("Bot " + token)
 	if err != nil {
 		return nil, err
@@ -58,17 +65,14 @@ func NewDiscordBot() (*DiscordBot, error) {
 	return &DiscordBot{discord: discord, User: user, guild: guild, Channels: channels}, nil
 }
 
-func (d *DiscordBot) Start() error {
-	d.discord.AddHandler(createChannel)
-	d.discord.AddHandler(deleteChannel)
-	d.discord.AddHandler(CreatePingOrPong)
-	d.discord.AddHandler(changeAvatar)
-	d.discord.AddHandler(clearMessages)
+func (d *DiscordBot) Start() {
+	for _, f := range events {
+		d.discord.AddHandler(f)
+	}
 	err := d.discord.Open()
 	if err != nil {
-		return err
+		panic(1)
 	}
-	return nil
 }
 
 func (d *DiscordBot) Stop() error {
