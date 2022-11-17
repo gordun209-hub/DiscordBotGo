@@ -91,6 +91,19 @@ func DeleteChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func GetLastMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if strings.HasPrefix(m.Content, "!last message") {
+		// get the last message
+		messages, err := s.ChannelMessages(m.ChannelID, 1, "", "", "")
+		if err != nil {
+			fmt.Println("error getting messages,", err)
+			return
+		}
+		// print the last message
+		fmt.Println("last message:", messages[0].Content)
+	}
+}
+
 func ChangeAvatar(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.HasPrefix(m.Content, "!change avatar") {
 		// get the name of the avatar

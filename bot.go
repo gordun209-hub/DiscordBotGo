@@ -15,6 +15,7 @@ var events = map[string]func(*discordgo.Session, *discordgo.MessageCreate){
 	"CreatePingOrPong": CreatePingOrPong,
 	"changeAvatar":     ChangeAvatar,
 	"clearMessages":    ClearMessages,
+	"GetLastMessage":   GetLastMessage,
 }
 
 var (
@@ -46,8 +47,6 @@ type DiscordBot struct {
 
 type Members struct {
 	members []*discordgo.Member
-	point   int
-	level   int
 }
 
 func (dg *DiscordBot) GetMembers() (*Members, error) {
@@ -56,12 +55,12 @@ func (dg *DiscordBot) GetMembers() (*Members, error) {
 	return &Members{members: members}, err
 }
 
-func (m *Members) String() string {
-	var s string
+func (m *Members) String() []User {
+	var users []User
 	for _, member := range m.members {
-		s += "\n" + member.User.Username + "\n discriminator :  " + member.User.Discriminator + " \n ID : " + member.User.ID
+		users = append(users, User{member.User.Username, member.User.ID, 0, 0})
 	}
-	return s
+	return users
 }
 
 func (d *DiscordBot) EventLoop() {
@@ -94,6 +93,22 @@ func NewDiscordBot() (*DiscordBot, error) {
 	}
 
 	return &DiscordBot{discord: discord, User: user, guild: guild, Channels: channels}, nil
+}
+
+func (d *DiscordBot) GetLastMessage() *discordgo.Message {
+	return d.Message
+}
+
+func (d *DiscordBot) IncreasePointOfUser(name string, u *User) {
+	member := d.findMember(name)
+	if member != nil {
+		u.point++
+	}
+	fmt.Println(u.point)
+}
+
+func (u *User) String() string {
+	return fmt.Sprintf("%s %s %d %d", u.name, u.ID, u.point, u.level)
 }
 
 func (d *DiscordBot) Start() {

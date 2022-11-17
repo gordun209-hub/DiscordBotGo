@@ -1,26 +1,43 @@
 package main
 
 import (
-	"context"
-	"log"
-
-	"github.com/gordun209-hub/webapp/db"
+	"fmt"
+	"os"
 )
 
-func ConnectDB() (*db.PrismaClient, context.Context) {
-	client := db.NewClient()
-	if err := client.Prisma.Connect(); err != nil {
-		log.Fatal(err)
-	}
-
-	ctx := context.Background()
-
-	return client, ctx
-	// create a post
+type User struct {
+	name  string
+	ID    string
+	point int
+	level int
 }
 
-func DisconnectDB(client *db.PrismaClient) {
-	if err := client.Prisma.Disconnect(); err != nil {
-		panic(err)
+type Users []User
+
+type DB struct {
+	users    []*User
+	fileName string
+}
+
+func newDB(fileName string) *DB {
+	return &DB{fileName: fileName}
+}
+
+func (db *DB) InitializeDB() {
+	db.fileName = "db.txt"
+	// create the file
+	file, err := os.Create(db.fileName)
+	if err != nil {
+		fmt.Println("error creating file,", err)
+		return
+	}
+	defer file.Close()
+}
+
+func (u *Users) IncreasePointOfUser(name string) {
+	for _, user := range *u {
+		if user.name == name {
+			user.point = user.point + 1
+		}
 	}
 }

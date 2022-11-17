@@ -1,23 +1,30 @@
 package main
 
+// Database sqlite3 //
 import (
 	"fmt"
+	"log"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
 	/* Create a new DiscordBot */
 	discordBot, err := NewDiscordBot()
 	if err != nil {
-		fmt.Println("error creating discord bot,", err)
-		return
+		log.Fatal(err)
 	}
 
+	/* Start the DiscordBot */
 	discordBot.Start()
-	/* Connect to db*/
-	client, _ := ConnectDB()
 
-	DisconnectDB(client)
+	msg := discordBot.GetLastMessage()
+	if msg != nil {
+		fmt.Println(msg.Content)
+	}
+	fmt.Println(msg)
 
-	fmt.Println(discordBot.GetMembers())
+	// write to the database
+
 	discordBot.EventLoop()
 }
