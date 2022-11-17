@@ -10,18 +10,18 @@ import (
 )
 
 var events = map[string]func(*discordgo.Session, *discordgo.MessageCreate){
-	"createChannel":    createChannel,
-	"deleteChannel":    deleteChannel,
+	"createChannel":    CreateChannel,
+	"deleteChannel":    DeleteChannel,
 	"CreatePingOrPong": CreatePingOrPong,
-	"changeAvatar":     changeAvatar,
-	"clearMessages":    clearMessages,
+	"changeAvatar":     ChangeAvatar,
+	"clearMessages":    ClearMessages,
 }
 
 var (
 	prefix  = "!"
 	token   = "MTAzODQ2MzA0OTQ5NDk1ODIyMA.GBNLBN.k0s7ZfFRmlw0eT_ZPk14D_USECtTHamtgg7nd8"
 	appID   = "1038463049494958220"
-	guildID = "1038468460654645310"
+	GuildID = "1038468460654645310"
 )
 
 type Config struct {
@@ -44,6 +44,37 @@ type DiscordBot struct {
 	Youtube  *Config
 }
 
+type Members struct {
+	members []*discordgo.Member
+	point   int
+	level   int
+}
+
+func (dg *DiscordBot) GetMembers() (*Members, error) {
+	// get the members
+	members, err := dg.discord.GuildMembers(GuildID, "", 1000)
+	return &Members{members: members}, err
+}
+
+func (m *Members) String() string {
+	var s string
+	for _, member := range m.members {
+		s += "\n" + member.User.Username + "\n discriminator :  " + member.User.Discriminator + " \n ID : " + member.User.ID
+	}
+	return s
+}
+
+func (d *DiscordBot) EventLoop() {
+	// Wait here until CTRL-C or other term signal is received.
+	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	<-sc
+
+	// Cleanly close down the Discord session.
+	d.discord.Close()
+}
+
 func NewDiscordBot() (*DiscordBot, error) {
 	discord, err := discordgo.New("Bot " + token)
 	if err != nil {
@@ -53,11 +84,11 @@ func NewDiscordBot() (*DiscordBot, error) {
 	if err != nil {
 		return nil, err
 	}
-	guild, err := discord.Guild(guildID)
+	guild, err := discord.Guild(GuildID)
 	if err != nil {
 		return nil, err
 	}
-	channels, err := discord.GuildChannels(guildID)
+	channels, err := discord.GuildChannels(GuildID)
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +108,15 @@ func (d *DiscordBot) Start() {
 
 func (d *DiscordBot) Stop() error {
 	return d.discord.Close()
+}
+
+func (d *DiscordBot) findMember(name string) *discordgo.Member {
+	for _, member := range d.guild.Members {
+		if member.User.Username == name {
+			return member
+		}
+	}
+	return nil
 }
 
 func eventLoop(dc *discordgo.Session) {

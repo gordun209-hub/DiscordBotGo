@@ -10,6 +10,35 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+// This function will be called (due to AddHandler above) every time a new
+// message is created on any channel that the authenticated bot has access to.
+func CreatePingOrPong(s *discordgo.Session, m *discordgo.MessageCreate) {
+	// Ignore all messages created by the bot itself
+	// This isn't required in this specific example but it's a good practice.
+	// If the message is "ping" reply with "Pong!"
+	if m.Content == "ping" {
+		s.ChannelMessageSend(m.ChannelID, "Pong!")
+	}
+	// If the message is "pong" reply with "Ping!"
+	if m.Content == "pong" {
+		s.ChannelMessageSend(m.ChannelID, "Ping!")
+	}
+
+	if m.Content == "play" {
+		s.ChannelMessageSend(m.ChannelID, "Playing!")
+	}
+	if m.Content == "stop" {
+		s.ChannelMessageSend(m.ChannelID, "Stopped!")
+	}
+	if m.Content == "mkk" {
+		s.ChannelMessageSend(m.ChannelID, "skm")
+	}
+
+	if m.Content == "good bot" {
+		s.ChannelMessageSend(m.ChannelID, "eyw")
+	}
+}
+
 var (
 	base64img   string
 	contentType string
@@ -17,12 +46,12 @@ var (
 	AvatarURL   string
 )
 
-func createChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
+func CreateChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.HasPrefix(m.Content, "!create channel") {
 		// get the name of the channel
 		channelName := strings.TrimPrefix(m.Content, "!create channel")
 		// create the channel
-		channel, err := s.GuildChannelCreate(guildID, channelName, discordgo.ChannelTypeGuildText)
+		channel, err := s.GuildChannelCreate(GuildID, channelName, discordgo.ChannelTypeGuildText)
 		if err != nil {
 			fmt.Println("error creating channel,", err)
 			return
@@ -34,12 +63,12 @@ func createChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func deleteChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
+func DeleteChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.HasPrefix(m.Content, "!delete channel ") {
 		// get the name of the channel
 		channelName := strings.TrimPrefix(m.Content, "!delete channel ")
 		// get the channel id
-		channels, err := s.GuildChannels(guildID)
+		channels, err := s.GuildChannels(GuildID)
 		if err != nil {
 			fmt.Println("error getting channels,", err)
 			return
@@ -62,7 +91,7 @@ func deleteChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func changeAvatar(s *discordgo.Session, m *discordgo.MessageCreate) {
+func ChangeAvatar(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.HasPrefix(m.Content, "!change avatar") {
 		// get the name of the avatar
 		AvatarURL := strings.TrimPrefix(m.Content, "!change avatar ")
@@ -97,7 +126,7 @@ func changeAvatar(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func clearMessages(s *discordgo.Session, m *discordgo.MessageCreate) {
+func ClearMessages(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.HasPrefix(m.Content, "!clear") {
 		// get the number of messages to delete
 		numMessages := strings.TrimPrefix(m.Content, "!clear")
