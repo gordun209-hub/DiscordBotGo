@@ -20,7 +20,6 @@ var events = map[string]func(*discordgo.Session, *discordgo.MessageCreate){
 
 var (
 	prefix  = "!"
-	token   = "MTAzODQ2MzA0OTQ5NDk1ODIyMA.GBNLBN.k0s7ZfFRmlw0eT_ZPk14D_USECtTHamtgg7nd8"
 	appID   = "1038463049494958220"
 	GuildID = "1038468460654645310"
 )
@@ -71,19 +70,6 @@ func (dg *DiscordBot) IncreasePoint(name string) {
 	fmt.Println(member)
 }
 
-// func (m *Members) String() []User {
-// 	var users []User
-// 	for _, member := range m {
-// 		users = append(users, User{
-// 			name:  "",
-// 			ID:    appID,
-// 			point: 0,
-// 			level: 0,
-// 		})
-// 	}
-// 	return users
-// }
-
 func (d *DiscordBot) EventLoop() {
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
@@ -96,7 +82,7 @@ func (d *DiscordBot) EventLoop() {
 }
 
 func NewDiscordBot() (*DiscordBot, error) {
-	discord, err := discordgo.New("Bot " + token)
+	discord, err := discordgo.New("Bot " + getToken())
 	if err != nil {
 		return nil, err
 	}
