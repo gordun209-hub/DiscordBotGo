@@ -25,43 +25,64 @@ var (
 	GuildID = "1038468460654645310"
 )
 
-type Config struct {
-	Prefix        string `json:"prefix"`
-	ServiceURL    string `json:"service_url"`
-	BotToken      string `json:"bot_token"`
-	OwnerID       string `json:"owner_id"`
-	UseSharding   bool   `json:"use_sharding"`
-	ShardID       int    `json:"shard_id"`
-	ShardCount    int    `json:"shard_count"`
-	DefaultStatus string `json:"default_status"`
-}
-
 type DiscordBot struct {
 	discord  *discordgo.Session
 	guild    *discordgo.Guild
 	User     *discordgo.User
 	Channels []*discordgo.Channel
-	Message  *discordgo.Message
-	Youtube  *Config
+	Members  []*discordgo.Member
 }
 
 type Members struct {
-	members []*discordgo.Member
+	name     string
+	memberID string
+	point    int
+	level    int
 }
 
+// For getting members as Member struct
+func (dg *DiscordBot) InitializeMembers() []*Members {
+	members := make([]*Members, 0)
+	for _, member := range dg.Members {
+		members = append(members, &Members{
+			name:     member.User.Username,
+			memberID: member.User.ID,
+			point:    0,
+			level:    0,
+		})
+	}
+	return members
+}
+
+// Get members as Member format
 func (dg *DiscordBot) GetMembers() (*Members, error) {
 	// get the members
-	members, err := dg.discord.GuildMembers(GuildID, "", 1000)
-	return &Members{members: members}, err
+
+	return &Members{
+		name:     "",
+		memberID: "",
+		point:    0,
+		level:    0,
+	}, nil
 }
 
-func (m *Members) String() []User {
-	var users []User
-	for _, member := range m.members {
-		users = append(users, User{member.User.Username, member.User.ID, 0, 0})
-	}
-	return users
+func (dg *DiscordBot) IncreasePoint(name string) {
+	member := dg.findMember(name)
+	fmt.Println(member)
 }
+
+// func (m *Members) String() []User {
+// 	var users []User
+// 	for _, member := range m {
+// 		users = append(users, User{
+// 			name:  "",
+// 			ID:    appID,
+// 			point: 0,
+// 			level: 0,
+// 		})
+// 	}
+// 	return users
+// }
 
 func (d *DiscordBot) EventLoop() {
 	// Wait here until CTRL-C or other term signal is received.
@@ -87,24 +108,23 @@ func NewDiscordBot() (*DiscordBot, error) {
 	if err != nil {
 		return nil, err
 	}
+	members, err := discord.GuildMembers(GuildID, "", 1000)
+	if err != nil {
+		return nil, err
+	}
+
 	channels, err := discord.GuildChannels(GuildID)
 	if err != nil {
 		return nil, err
 	}
 
-	return &DiscordBot{discord: discord, User: user, guild: guild, Channels: channels}, nil
-}
-
-func (d *DiscordBot) GetLastMessage() *discordgo.Message {
-	return d.Message
-}
-
-func (d *DiscordBot) IncreasePointOfUser(name string, u *User) {
-	member := d.findMember(name)
-	if member != nil {
-		u.point++
-	}
-	fmt.Println(u.point)
+	return &DiscordBot{
+		discord:  discord,
+		guild:    guild,
+		User:     user,
+		Channels: channels,
+		Members:  members,
+	}, nil
 }
 
 func (u *User) String() string {
@@ -132,24 +152,4 @@ func (d *DiscordBot) findMember(name string) *discordgo.Member {
 		}
 	}
 	return nil
-}
-
-func eventLoop(dc *discordgo.Session) {
-	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-	<-sc
-
-	// Cleanly close down the Discord session.
-	dc.Close()
-}
-
-func getToken() string {
-	token := os.Getenv("DISCORD_TOKEN")
-	if token == "" {
-		fmt.Println("No token provided")
-		os.Exit(1)
-	}
-	return token
 }

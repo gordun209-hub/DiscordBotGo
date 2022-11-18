@@ -31,6 +31,21 @@ func (db *DB) InitializeDB() {
 		fmt.Println("error creating file,", err)
 		return
 	}
+
+	defer file.Close()
+}
+
+func (db *DB) AddUser(u *User) {
+	db.users = append(db.users, u)
+}
+
+func (db *DB) InitializeUsers(dg *DiscordBot) {
+	// read the file
+	file, err := os.Open(db.fileName)
+	if err != nil {
+		fmt.Println("error opening file,", err)
+		return
+	}
 	defer file.Close()
 }
 

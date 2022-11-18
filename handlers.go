@@ -91,17 +91,36 @@ func DeleteChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func GetLastMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if strings.HasPrefix(m.Content, "!last message") {
-		// get the last message
-		messages, err := s.ChannelMessages(m.ChannelID, 1, "", "", "")
+func IncreaseUserPoints(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if strings.HasPrefix(m.Content, "!points") {
+		// get the user id
+		userID := strings.TrimPrefix(m.Content, "!points ")
+		// increase the user points
+		err := IncreasePoints(userID)
 		if err != nil {
-			fmt.Println("error getting messages,", err)
+			fmt.Println("error increasing points,", err)
 			return
 		}
-		// print the last message
-		fmt.Println("last message:", messages[0].Content)
+		s.ChannelMessageSend(m.ChannelID, "Points increased!")
 	}
+}
+
+func IncreasePoints(userID string) error {
+	// increase the user points
+	return nil
+}
+
+func GetLastMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
+	// get the last message
+	messages, err := s.ChannelMessages(m.ChannelID, 10, "", "", "")
+	if err != nil {
+		fmt.Println("error getting messages,", err)
+		return
+	}
+	// print the last message
+	user := messages[0].Author
+	fmt.Println(user)
+	fmt.Println("last message:", messages[0].Content)
 }
 
 func ChangeAvatar(s *discordgo.Session, m *discordgo.MessageCreate) {

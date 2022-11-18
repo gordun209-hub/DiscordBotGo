@@ -15,16 +15,18 @@ func main() {
 		log.Fatal(err)
 	}
 
+	db := newDB("db.txt")
+	db.InitializeDB()
+	// db.InitializeUsers(discordBot)
 	/* Start the DiscordBot */
 	discordBot.Start()
 
-	msg := discordBot.GetLastMessage()
-	if msg != nil {
-		fmt.Println(msg.Content)
+	membrs := discordBot.InitializeMembers()
+
+	for _, member := range membrs {
+		fmt.Println(member.level + 1)
 	}
-	fmt.Println(msg)
 
 	// write to the database
-
 	discordBot.EventLoop()
 }
